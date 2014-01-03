@@ -1,0 +1,313 @@
+#+TITLE: Конкуретное и параллельное программирование в Clojure
+#+AUTHOR: Alex Ott 
+#+EMAIL: alexott@gmail.com
+#+DATE:
+#+DESCRIPTION: конспект лекций для курса о Clojure
+#+KEYWORDS: Clojure, Concurrency
+
+#+LANGUAGE: ru
+#+FILETAGS: :Clojure:Talks:
+
+#+OPTIONS: H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS: TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:nil mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:   
+#+LINK_HOME: 
+#+startup: beamer
+#+LaTeX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [bigger, russian, notes=hide]
+#+LATEX_HEADER: \mode<presentation> {\usetheme{Madrid}\setbeamercovered{transparent}\usefonttheme[onlysmall]{structurebold}\setbeamertemplate{note page}[plain]}
+#+LATEX_HEADER: \usepackage{mathtext}
+#+LATEX_HEADER: \usepackage{ucs}
+#+LATEX_HEADER: \usepackage{listings}
+#+LATEX_HEADER: \usepackage[utf8x]{inputenc}
+#+LATEX_HEADER: \usepackage[T2A]{fontenc}
+#+LATEX_HEADER: \usepackage[russian,english]{babel}
+#+LATEX_HEADER: \hypersetup{unicode,colorlinks=false,bookmarks}
+#+LATEX_HEADER: \institute[\lstinline{alexott@gmail.com}]{\lstinline{alexott@gmail.com}}
+#+BEAMER_FRAME_LEVEL: 2
+#+BIND: org-beamer-outline-frame-title "О чем пойдет речь?"
+
+* Общий план...                                                    :noexport:
+
+ - [ ] Общий обзор
+   - [ ] State & Identity & Time
+ - [ ] Изменяемое состояние 
+   - [ ] Ссылки
+   - [ ] Атомы
+   - [ ] Агенты
+   - [ ] Vars
+ - [ ] Параллельное программирование
+   - [ ] Встроенные примитивы - pmap, pcalls, ...
+   - [ ] futures
+   - [ ] promises
+   - [ ] delays
+   - [ ] =locking= & other low-level primitives
+   - [ ] Использование средств JVM
+ - [ ] Related topics (http://adambard.com/blog/clojure-concurrency-smorgasbord/)
+   - [ ] Reducers
+   - [ ] avout ?
+   - [ ] clojure-hadoop + http://blog.cloudera.com/blog/2013/12/write-mapreduce-jobs-in-idiomatic-clojure-with-parkour/
+   - [ ] [[http://puniverse.github.io/pulsar/][Pulsar]]
+   - [ ] [[https://github.com/ztellman/lamina][Lamina]] (http://adambard.com/blog/why-clojure-part-2-async-magic/)
+   - [ ] mention core.async (http://stuartsierra.com/2013/12/08/parallel-processing-with-core-async)
+ - [ ] Заключение
+ - [ ] Ссылки на ресурсы...
+
+
+* О чем пойдет речь?                                               :noexport:
+
+** О чем пойдет речь?                                              :noexport:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+*** note                                                             :B_noteNH:
+
+Доброе время суток.  Меня зовут Алекс Отт, и рад возможности рассказать вам о конкуретном
+и параллельном программировании в Clojure.
+
+Поддержка конкуретного и параллельного программирования в Clojure - это одна из самых
+привлекательных особенностей данного языка.  За счет того, что эта поддержка встроена в
+сам язык, то написание конкуретных программ становится достаточно простым делом.
+
+Эта часть курса состоит из нескольких разделов:
+ - Сначала мы рассмотрим как устроено конкуретное программирование в Clojure в целом
+ - Затем мы разберем разные средства работы с изменяемыми данными - ссылки,
+   атомы, агенты и т.д.
+ - После этого мы обратим внимание на поддержку параллельного выполнения кода используя
+   как встроенные средства, так и возможности JVM
+ - И в последнем разделе мы вкратце рассмотрим некоторые возможности и пакеты, которые
+   имеют отношение к конкуретному и параллельному программированию.
+
+Для данной части курса будет предложено небольшое домашнее задание.
+
+* Concurrency in Clojure: The big picture                            :export:
+
+** Concurrency in Clojure: The big picture                           :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+*** note                                                             :B_noteNH:
+
+
+
+* Изменяемые состояние                                               :export:
+
+** Ссылки (references)                                               :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+
+TODO:
+ - [ ] mention that send to agent will be done only when transaction is committed...
+ - [ ] explain =alter= vs. =commute=
+ - [ ] say about =io!=
+ - [ ] validators
+
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+** Атомы                                                             :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+
+** Агенты                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+ - [ ] validators
+ - [ ] watchers
+ - [ ] error handling
+ - [ ] await
+ - [ ] send vs. send-off
+ - [ ] thread pools
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+** Vars                                                              :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+
+
+* head 1                                                             :export:
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+
+* head 1                                                             :export:
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+
+* head 1                                                             :export:
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+** head 2                                                            :export:
+   :PROPERTIES:
+   :BEAMER_env: frame
+   :BEAMER_envargs: [t]
+   :END:
+
+
+*** note                                                             :B_noteNH:
+
+
