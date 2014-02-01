@@ -48,14 +48,14 @@
 
 (def err-agent (agent 1))
 
-(send err-agent (fn [_] (throw (Exception. "we have a problem!"))))
+(comment
+  (send err-agent (fn [_] (throw (Exception. "we have a problem!")))))
 
-(send err-agent identity)
+;;(send err-agent identity)
 
 (def err-agent (agent 1 :error-mode :continue))
 
-(send err-agent inc)
-
+;;(send err-agent inc)
 
 (def ^:dynamic *test-var* 20)
 
@@ -80,11 +80,11 @@
 (doseq [x (range 3)] (run-thread2 x))
 
 
-(def p (promise))
-(do (future
-      (Thread/sleep 5000)
-      (deliver p :fred))
-    @p)
+;; (def p (promise))
+;; (do (future
+;;       (Thread/sleep 5000)
+;;       (deliver p :fred))
+;;     @p)
 
 (defn long-running-job [n]
      (Thread/sleep 3000)
@@ -98,13 +98,13 @@
 ;; (10 11 12 13)
 ;; 
 
-(defn func-1 [] 1)
-(defn func-2 [] 2)
-(defn func-3 [] 3)
-(defn func-4 [] 4)
-(defn func-5 [] 5)
+;; (defn func-1 [] 1)
+;; (defn func-2 [] 2)
+;; (defn func-3 [] 3)
+;; (defn func-4 [] 4)
+;; (defn func-5 [] 5)
 
-(pcalls func-1 func-2 func-3 func-4 func-5)
+;; (pcalls func-1 func-2 func-3 func-4 func-5)
 
 
 (defn use-delays [x]
@@ -112,3 +112,51 @@
    :some-info true})
 
 
+(defn vrange [n]
+  (loop [i 0
+         v []]
+    (if (< i n)
+      (recur (inc i) (conj v i))
+      v)))
+
+(defn vrange2 [n]
+  (loop [i 0
+         v (transient [])]
+    (if (< i n)
+      (recur (inc i) (conj! v i))
+      (persistent! v))))
+
+
+(defprotocol TestProtocol
+  (get-data [this])
+  (set-data [this o]))
+
+(deftype Test [^:unsynchronized-mutable x-var]
+  TestProtocol
+  (set-data [this o] (set! x-var o))
+  (get-data [this] x-var)
+  )
+
+(def h (java.util.HashMap.))
+
+(defn add-to-map [h k v]
+  (locking h
+      (.put h k v)))
+
+(require '[clojure.core.reducers :as r])
+(use 'criterium.core)
+
+(bench (do (into [] (r/filter even? (r/map inc (vec (range 100000)))))
+          :done))
+
+(bench (do (into [] (filter even? (map inc (vec (range 100000)))))
+          :done))
+
+(bench (do (doall (filter even? (map inc (range 100000))))
+           :done))
+
+(def v (vec (range 100000)))
+
+(bench (reduce + (map inc v)))
+(bench (r/reduce + (r/map inc v)))
+(bench (r/fold + (r/map inc v)))
