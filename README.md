@@ -1,14 +1,8 @@
-# concur-lectures
+This repository contains slides & transcript of lecture about concurrency in Clojure that
+was done as a part of the [online course about Clojure (in Russian language)](https://clojurecourse.by/). 
 
-A Clojure library designed to ... well, that part is up to you.
+Playlist with videos corresponding to lectures about concurrency is available on
+[Youtube](https://www.youtube.com/playlist?list=PLdSfLyn35ej8fpqxrJEyfskDAWfbdM6Vv).
 
-## Usage
+Copyright © 2014 Alex Ott
 
-FIXME
-
-## License
-
-Copyright © 2014 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.

@@ -1,0 +1,1731 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru" xml:lang="ru">
+<head>
+<title>Конкурентное и параллельное программирование в Clojure</title>
+<!-- 2014-02-01 Sat 11:27 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="Alex Ott" />
+<meta  name="description" content="конспект лекций для курса о Clojure"
+ />
+<meta  name="keywords" content="Clojure, Concurrency" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Конкурентное и параллельное программирование в Clojure</h1>
+<div id="table-of-contents">
+<h2>&#1057;&#1086;&#1076;&#1077;&#1088;&#1078;&#1072;&#1085;&#1080;&#1077;</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1. О чем пойдет речь?</a></li>
+<li><a href="#sec-2">2. Concurrency in Clojure: The big picture</a></li>
+<li><a href="#sec-3">3. Изменяемое состояние</a>
+<ul>
+<li><a href="#sec-3-1">3.1. Ссылки (references)</a></li>
+<li><a href="#sec-3-2">3.2. Атомы</a></li>
+<li><a href="#sec-3-3">3.3. Агенты</a>
+<ul>
+<li><a href="#sec-3-3-1">3.3.1. Использование агентов</a></li>
+<li><a href="#sec-3-3-2">3.3.2. Обработка ошибок</a></li>
+<li><a href="#sec-3-3-3">3.3.3. Ожидание окончания обработки и т.п.</a></li>
+</ul>
+</li>
+<li><a href="#sec-3-4">3.4. Vars (переменные)</a>
+<ul>
+<li><a href="#sec-3-4-1">3.4.1. Изменение vars для потока выполнения</a></li>
+<li><a href="#sec-3-4-2">3.4.2. Изменение базового (top-level) значения var</a></li>
+<li><a href="#sec-3-4-3">3.4.3. Локальные переменные</a></li>
+</ul>
+</li>
+<li><a href="#sec-3-5">3.5. Валидаторы и наблюдатели</a></li>
+<li><a href="#sec-3-6">3.6. Advanced topics</a>
+<ul>
+<li><a href="#sec-3-6-1">3.6.1. Transients</a></li>
+<li><a href="#sec-3-6-2">3.6.2. Изменяемые поля в <code>deftype</code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#sec-4">4. Параллельное и конкурентное программирование</a>
+<ul>
+<li><a href="#sec-4-1">4.1. Параллельное выполнение кода</a></li>
+<li><a href="#sec-4-2">4.2. Futures</a></li>
+<li><a href="#sec-4-3">4.3. Delays</a></li>
+<li><a href="#sec-4-4">4.4. Promises</a></li>
+<li><a href="#sec-4-5">4.5. Блокировки</a></li>
+<li><a href="#sec-4-6">4.6. Средства JVM</a></li>
+</ul>
+</li>
+<li><a href="#sec-5">5. Advanced topics</a>
+<ul>
+<li><a href="#sec-5-1">5.1. Reducers</a></li>
+<li><a href="#sec-5-2">5.2. Core.async</a></li>
+<li><a href="#sec-5-3">5.3. Avout</a></li>
+<li><a href="#sec-5-4">5.4. Pulsar</a></li>
+<li><a href="#sec-5-5">5.5. Lamina</a></li>
+<li><a href="#sec-5-6">5.6. Hadoop-based</a></li>
+<li><a href="#sec-5-7">5.7. Ресурсы</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> О чем пойдет речь?</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Доброе время суток.  Меня зовут Алекс Отт, и рад возможности рассказать вам о конкурентном
+и параллельном программировании в Clojure.
+</p>
+
+<p>
+Поддержка конкурентного и параллельного программирования в Clojure - это одна из самых
+привлекательных особенностей данного языка.  За счет того, что эта поддержка встроена в
+сам язык, то написание конкурентных программ становится достаточно простым делом.
+</p>
+
+<p>
+Эта часть курса состоит из нескольких разделов:
+</p>
+<ul class="org-ul">
+<li>Сначала мы рассмотрим как устроено конкурентное программирование в Clojure в целом
+</li>
+<li>Затем мы разберем разные средства работы с изменяемыми данными - ссылки,
+атомы, агенты и т.д.
+</li>
+<li>После этого мы обратим внимание на поддержку параллельного выполнения кода используя
+как встроенные средства, так и возможности JVM
+</li>
+<li>И в последнем разделе мы вкратце рассмотрим некоторые возможности и пакеты, которые
+имеют отношение к конкурентному и параллельному программированию.
+</li>
+</ul>
+
+<p>
+Для данной части курса будет предложено небольшое домашнее задание.
+</p>
+</div>
+</div>
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> Concurrency in Clojure: The big picture</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+Как вы уже знаете, все данные в Clojure по умолчанию являются неизменяемыми и операции над
+ними дают новую структуру данных.  Но бывают ситуации, когда вам надо изменить какое-то
+значение, и сделать это изменение видимым для других частей программы.
+</p>
+
+<p>
+В императивных языках это сделать очень легко - переменная меняется на месте, и все ок.
+Но если вы работаете с данными из нескольких потоков, то на вас сразу наваливается
+множество проблем - вам нужно как-либо гарантировать что изменения будут сделаны атомарно,
+что другие потоки не увидят неконсистентных данных и т.д.  На помощь приходят локи для
+защиты переменных и т.п., но если вам нужно делать изменения в нескольких местах, то тут
+могут навалиться и другие проблемы, как дедлоки и т.д.
+</p>
+
+<p>
+Одна из причин этой проблемы заключается в том, что в императивных языках состояние
+переменной тесно связано с ее identity (именем) - это неразрывное целое - нет понятия
+истории состояний переменной в конкретные моменты времени, так что все изменения видны
+всем частям программы которые пользуются данными полученными в конкретный момент времени.
+Чтобы избежать проблем при работе с изменяемыми данными, в Clojure при доступе к значению,
+программы получают снапшот состояния переменной с данным именем в конкретный момент
+времени.  Если в следующий момент времени нам надо установить новое значение, то имя
+связывается с новым состоянием, а предыдущие снапшоты не изменяются. 
+</p>
+
+<p>
+Это можно изобразить в виде следующего графика: 
+</p>
+
+<p>
+(see slide)
+</p>
+
+<p>
+Вы также можете думать об identity как о указателе на текущее состояние, так что при
+изменении происходит установка указателя на новое значение без изменения оригинального
+значения. 
+</p>
+
+<p>
+Использование такого подхода делает конкурентное и параллельное программирование в Clojure
+достаточно простой задачей.
+</p>
+
+<p>
+Имеется отличная <a href="http://www.infoq.com/presentations/Value-Identity-State-Rich-Hickey">лекция Рича Хики</a> где он рассказывает о Identity, State &amp; Time.  Если у
+вас будет время, то советую посмотреть ее.
+</p>
+</div>
+</div>
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3"><span class="section-number-2">3</span> Изменяемое состояние</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+Существует несколько видов изменяемых данных в Clojure, которые можно классифицировать по
+разным признакам: синхронное/асинхронное, координированное/не-координированное, и т.д.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">Вид изменения</th>
+<th scope="col" class="left">Синхронное</th>
+<th scope="col" class="left">Асинхронное</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">Координированное</td>
+<td class="left">ссылки (ref)</td>
+<td class="left">-</td>
+</tr>
+
+<tr>
+<td class="left">Независимое</td>
+<td class="left">атом</td>
+<td class="left">agent</td>
+</tr>
+
+<tr>
+<td class="left">Изолированное</td>
+<td class="left">var</td>
+<td class="left">-</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+Для доступа к изменяемым данным используется функция <code>deref</code>, а поскольку она используется
+очень часто, то для нее имеется специальный макрос процедуры чтения: <code>@</code>.  Но об этом
+операторе мы поговорим подробней в следующих разделах.
+</p>
+
+<p>
+В качестве примера совместного использования ссылок и агентов, вы можете посмотреть на
+программу <code>ants</code>, которую Рич Хики использовал для демонстрации возможностей Clojure в
+части конкурентного и параллельного программирования.
+</p>
+</div>
+
+<div id="outline-container-sec-3-1" class="outline-3">
+<h3 id="sec-3-1"><span class="section-number-3">3.1</span> Ссылки (references)</h3>
+<div class="outline-text-3" id="text-3-1">
+<p>
+Давайте начнем рассмотрение изменяемого состояния с ссылок (refs).
+</p>
+
+<p>
+Как уже упоминалось ранее, ссылки поддерживают координированное, синхронное изменение
+данных на базе Software Transaction Memory (STM).  Вы можете думать об изменениях
+происходящих в рамках ссылок также как о транзакциях которые выполняются в обычных
+реляционных базах данных.  Единственное отличие от СУБД заключается в том, что ссылки не
+реализуют durability - сохранение данных в долгосрочной памяти.  Все остальные свойства
+СУБД сохранены - atomicity, consistence, isolation.   
+</p>
+
+<p>
+Также как и во многих базах данных, транзакции Clojure основаны на Multiversion
+concurrency control (MVCC), когда Clojure в момент начала транзакции "захватывает"
+состояние переменных, которые используются в транзакции, и использует эти значения на
+протяжении всей транзакции.  Когда вычисление заканчивается, то Clojure пытается внести
+сделанные изменения, и если какая-либо из переменных уже была изменена, то транзакция
+откатывается и начинается снова (в настоящее время максимальное количество повторений
+равно 10000 &#x2013; если оно превышено, то будет сгенерировано исключение).  Подробно о
+внутреннем устройстве STM в Clojure вы можете прочитать в <a href="http://java.ociweb.com/mark/stm/article.html">статье</a> Mark Volkmann, указанной
+в разделе "Ресурсы".
+</p>
+
+<p>
+Это можно проиллюстрировать следующей схемой: &#x2026;.
+</p>
+
+<p>
+Общий синтаксис объявления ссылок выглядит следующим образом:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #483d8b;">ref</span> x &amp; &#1086;&#1087;&#1094;&#1080;&#1080;)
+</pre>
+</div>
+
+<p>
+В качестве <code>x</code> вы можете использовать любой из нужных типов данных.  Вы также можете
+указать различные опции, например, связать метаданные с нужной ссылкой, добавить
+функцию-валидатор, или проконтролировать размер истории изменений.  Подробную информацию
+вы можете найти в <a href="http://clojure.org/refs">официальной документации</a>.
+</p>
+
+<p>
+В общем виде, изменение значений ссылок происходит следующим образом: вы начинаете
+транзакцию с помощью <code>dosync</code>, и выполняете блок кода внутри этой транзакции.  Блок кода
+может использовать разные функции для изменения данных: <code>alter</code>, <code>commute</code> или <code>ref-set</code>.
+</p>
+
+
+<p>
+В качестве примера, давайте рассмотрим следующий кусок кода:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">transfer-money</span> [from to amount]
+  (<span style="color: #a020f0;">dosync</span>
+   (<span style="color: #a020f0;">if</span> (<span style="color: #483d8b;">&lt;</span> @from amount)
+     (<span style="color: #a020f0;">throw</span> (<span style="color: #228b22;">IllegalStateException.</span> 
+         (<span style="color: #483d8b;">str</span> <span style="color: #8b2252;">"Account has less money that required! "</span>
+              @from <span style="color: #8b2252;">" &lt; "</span> amount)))
+     (<span style="color: #a020f0;">do</span> (<span style="color: #483d8b;">alter</span> from - amount)
+         (<span style="color: #483d8b;">alter</span> to + amount)))))
+</pre>
+</div>
+
+<p>
+Эта функция может использоваться следующим образом:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">def</span> <span style="color: #008b8b;">^:private</span> <span style="color: #0000ff;">acc-1</span> (<span style="color: #483d8b;">ref</span> 1000))
+(<span style="color: #a020f0;">def</span> <span style="color: #008b8b;">^:private</span> <span style="color: #0000ff;">acc-2</span> (<span style="color: #483d8b;">ref</span> 1000))
+
+user=&gt; (transfer-money acc-1 acc-2 500)
+1500
+user=&gt; @acc-1
+500
+user=&gt; @acc-2
+1500
+</pre>
+</div>
+
+<p>
+Если транзакция была завершена успешно, то в качестве результата будет возвращено значение
+последнего выражения, но надо принимать во внимание различие между <code>commute</code> &amp; <code>alter</code> (и
+<code>ref-set</code>).
+</p>
+
+<p>
+Когда мы используем <code>alter</code> в транзакции, и кто-то изменил ту же самую ссылку до того, как
+наша транзакция закончилась, то транзакция будет выполнена еще раз (как минимум), пока мы
+не сможем сохранить наши изменения.  Но в некоторых случаях, изменение данных достаточно
+простое, и не имеет значения в каком порядке изменения были сделаны в разных транзакциях,
+т.е. изменения коммутативны.  Для таких ситуаций, в Clojure предусмотрена функция
+<code>commute</code>, которая может применять коммутативные изменения к ссылкам.  Стоит отметить, что
+хотя <code>commute</code> изменит значение переменной внутри транзакции, но оно будет применено
+только к копии внутри транзакции, а не к актуальному значению - к нему функция будет
+применена только при завершении транзакции, и не играет роли то, что кто-то уже изменил
+значение или нет (тут стоит отметить, что значение возвращенное из блока кода, может
+отличаться от актуального значения ссылки).  Так что в результате использования <code>commute</code>
+над ссылками, мы никогда не получаем конфликтов, так что транзакции никогда не будут
+повторяться, что может вести к значительным улучшениям производительности.
+</p>
+
+<p>
+Например, у нас может быть простая функция, которая добавляет деньги на депозит:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">add-to-deposit</span> [to amount]
+  (<span style="color: #a020f0;">dosync</span>
+   (<span style="color: #483d8b;">commute</span> to + amount)))
+</pre>
+</div>
+
+<p>
+Также существует функция <code>ensure</code> которая может быть вызвана для ссылки, если вы хотите
+предотвратить ее изменение на время выполнения текущей транзакции &#x2013; например, вы хотите
+запретить ее изменение во время вашего чтения, или вы хотите попытаться ее изменить позже.
+Эта функция запретит изменение данной ссылки из других транзакций, но также существует
+возможность что текущая транзакция не сможет ее изменить, если другие транзакции также
+используют <code>ensure</code>.
+</p>
+
+<p>
+В том случае, если мы используем <code>alter</code> или <code>ref-set</code>, транзакция может повторена, если
+кто-то изменил значение.  Поскольку блок кода может выполняться несколько раз, то он не
+должен содержать побочных эффектов, например операций ввода-вывода.  Для упрощения
+контроля за кодом, который имеет побочные эффекты, в Clojure имеется специальный макрос
+<code>io!</code>, который выбросит исключение, если он исполняется в рамках транзакции.  С его
+помощью вы можете избежать ошибок, используя неправильную функцию в транзакциях.
+Применение кода может выглядеть следующим образом:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">write-log</span> [log-msg]
+  (<span style="color: #483d8b;">io!</span>
+   (<span style="color: #483d8b;">println</span> log-msg)))
+</pre>
+</div>
+
+<p>
+В некоторых случаях, вам может понадобиться прервать транзакцию и не повторять ее,
+например, если вы обнаруживаете некорректные входные данные.  В этом случае, вы можете
+просто сгенерировать исключение, и транзакция будет прервана.  В некоторых случаях, делать
+проверку в каждом блоке может не иметь смысла, и для почти всех примитивов изменения
+данных введена возможность задания функции-валидатора (с помощью параметра <code>:validator</code>
+при объявлении ссылки), которая будет вызвана при изменении значения.  Но об этом мы
+поговорим отдельно.
+</p>
+</div>
+</div>
+<div id="outline-container-sec-3-2" class="outline-3">
+<h3 id="sec-3-2"><span class="section-number-3">3.2</span> Атомы</h3>
+<div class="outline-text-3" id="text-3-2">
+<p>
+Атомы - более простой в использовании способ организации изменяемого состояния.
+Существует множество случаев когда вам не нужно координировать изменение нескольких
+состояний, а просто внести изменение в какое-то одно - в этом случае атом является
+идеальным решением.
+</p>
+
+<p>
+Использовать атомы очень просто - создайте инстанс атома с помощью функции <code>atom</code> передав
+ей некоторое начальное значение, а потом просто вызывайте функцию <code>swap!</code> передав ей имя
+атома, и функцию которая к нему будет применена (а также дополнительные параметры для этой
+функции, если они необходимы).  Синтаксис <code>swap!</code> совпадает с синтаксисом <code>alter</code>, но не
+требует старта транзакции. В качестве результата функция <code>swap!</code> возвращает новое значение
+атома.
+</p>
+
+<p>
+Стоит отметить, что функция не должна иметь побочных эффектов, поскольку если она может
+быть выполнена несколько раз, если во время ее выполнения, кто-то другой изменит состояние
+атома.  
+</p>
+
+<p>
+(see slide)
+</p>
+
+<p>
+Давайте посмотрим на пример со именованными счетчиками, которые можно увеличивать,
+уменьшать и сбрасывать в начальное значение.  Реализация может выглядеть следующим образом:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">def</span> <span style="color: #008b8b;">^:private</span> <span style="color: #0000ff;">counters-atom</span> (<span style="color: #483d8b;">atom</span> {}))
+
+(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">inc-counter</span> [name]
+  (<span style="color: #483d8b;">swap!</span> counters-atom update-in [name] (fnil inc 0)))
+
+(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">dec-counter</span> [name]
+  (<span style="color: #483d8b;">swap!</span> counters-atom update-in [name] (fnil dec 0)))
+
+(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">reset-counter</span> [name]
+  (<span style="color: #483d8b;">swap!</span> counters-atom assoc name 0))
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">user=&gt; @counters-atom
+{}
+user=&gt; (inc-counter <span style="color: #008b8b;">:test</span>)
+{<span style="color: #008b8b;">:test</span> 1}
+user=&gt; (inc-counter <span style="color: #008b8b;">:another-test</span>)
+{<span style="color: #008b8b;">:another-test</span> 1, <span style="color: #008b8b;">:test</span> 1}
+user=&gt; (reset-counter <span style="color: #008b8b;">:test</span>)
+{<span style="color: #008b8b;">:another-test</span> 1, <span style="color: #008b8b;">:test</span> 0}
+</pre>
+</div>
+
+<p>
+Тут все достаточно просто - мы имеем один атом, который содержит map в котором хранятся
+счетчики. Для увеличения или уменьшения счетчиков используется функция <code>update-in</code> которая
+применяется к текущему состоянию.  Для того, чтобы убрать проверку на наличие счетчика,
+вместо <code>inc</code> &amp; <code>dec</code> тут используется функция-враппер <code>fnil</code>, которая подставляет значение
+0 если счетчика с таким именем еще не существует.  Реализация же <code>reset-counter</code> очень
+проста - она просто устанавливает значение слота map в нужное значение.
+</p>
+
+<p>
+В дополнение к функции <code>swap!</code>, которая изменяет состояние атома применяя к нему функцию,
+для работы с атомами существует и функция <code>reset!</code> которая позволяет явно установить
+значение атома в нужное значение.  Также имеется и низкоуровневая функция
+<code>compare-and-set!</code> которая установит атом в новое значение, только если он сейчас равен
+указанному старому значению (я не думаю, что эта функция будет использоваться в вашем коде).
+</p>
+
+<p>
+Также как и ссылки, при создании атома вы можете указать (с помощью параметра
+<code>:validator</code>) функцию которая будет проводить валидацию изменяемых данных (если данные
+неправильные, то функция должна вернуть <code>false</code> или сгенерировать исключение).
+Аналогично, вы можете добавить и функции-наблюдатели, которые будут вызваны при изменении
+значений.
+</p>
+
+<p>
+Кроме того, Вы также можете связать метаданные с атомом - для этого, передайте map в с
+необязательным параметром <code>:meta</code>.
+</p>
+</div>
+</div>
+<div id="outline-container-sec-3-3" class="outline-3">
+<h3 id="sec-3-3"><span class="section-number-3">3.3</span> Агенты</h3>
+<div class="outline-text-3" id="text-3-3">
+<p>
+В отличии от предыдущих двух типов изменяемого состояния, которые были синхронными, агенты
+производят изменения асинхронно - вы вызываете функцию для изменения состояния, и она
+будет применена в какой-то момент в будущем.  Агенты удобно использовать когда у вас есть
+какое-то центральное состояние, которое можно последовательно изменять из разных потоков
+выполнения.  Важным отличием агентов от других примитивов является то, что выполняемый код
+может содержать побочные эффекты, такие как ввод-вывод (вы, например, можете использовать
+агенты для централизованного сбора и сохранения логов).  Агенты также часто используются
+для неявной параллелизации кода (хорошим примером является web crawler из книги Clojure
+Programming).
+</p>
+</div>
+
+<div id="outline-container-sec-3-3-1" class="outline-4">
+<h4 id="sec-3-3-1"><span class="section-number-4">3.3.1</span> Использование агентов</h4>
+<div class="outline-text-4" id="text-3-3-1">
+<p>
+Процесс использования агентов очень прост - вы создаете агент, с некоторым начальным
+состоянием, с помощью функции <code>agent</code>, а затем изменяете его с помощью функций <code>send</code> или
+<code>send-off</code>.  Обе эти функцию имеют одинаковый синтаксис, похожий на синтаксис <code>swap!</code> или
+<code>alter</code> - вы указываете имя агента, а также передаете функцию которая будет применена к
+текущему состоянию агента и результат ее выполнения будет использоваться в качестве нового
+состояния агента.
+</p>
+
+<p>
+Обе функции возвращают управление немедленно, не дожидаясь применения изменений.  Функции
+указанные пользователем выполняются в порядке вызова <code>send</code> и <code>send-off</code>, последовательно
+применяясь к текущему состоянию агента.  Главное различие между этими двумя функциями
+заключается в том, что код переданный в <code>send</code> выполняется в пуле потоков выполнения
+фиксированного размера, а для кода переданного <code>send-off</code> используются потоки выполнения
+из пула потоков который не ограничен в размерах (тот же что и для future).  Так что
+рекомендуется, чтобы код выполняемый <code>send</code> не выполнял никаких длительных вычислений и не
+вызывал функции которые могут привести к блокировке выполнения (например, функции
+ввода/вывода).  (В Clojure версии 1.5 стало возможным явно задать пулы потоков выполнения
+для <code>send</code> &amp; <code>send-off</code>, а кроме того, появилась функция <code>send-via</code>, которая позволяет
+указать пул в котором должен выполниться этот код.
+</p>
+
+<p>
+(see slide)
+</p>
+
+<p>
+Давайте перепишем наш пример со счетчиками используя агенты:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">def</span> <span style="color: #008b8b;">^:private</span> <span style="color: #0000ff;">counters-agent</span> (<span style="color: #483d8b;">agent</span> {}))
+
+(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">a-inc-counter</span> [name]
+  (<span style="color: #483d8b;">send</span> counters-agent update-in [name] (fnil inc 0)))
+
+(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">a-dec-counter</span> [name]
+  (<span style="color: #483d8b;">send</span> counters-agent update-in [name] (fnil dec 0)))
+
+(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">a-reset-counter</span> [name]
+  (<span style="color: #483d8b;">send</span> counters-agent assoc name 0))
+</pre>
+</div>
+
+
+<p>
+Хочется отметить, что вы можете использовать функции <code>send</code> &amp; <code>send-off</code> как в
+транзакциях, так и внутри блоков кода, который выполняется в агенте (вложенные <code>send</code>).
+Но при этом надо помнить о том, что в этих случаях выполнение <code>send</code> откладывается до
+момента когда транзакция будет успешно закончена (т.е.  гарантируется что <code>send</code> не будет
+выполнен несколько раз), или блок кода выполняемый агентом будет завершен.
+</p>
+
+<p>
+В некоторых случаях вам может понадобиться выполнить <code>send</code> или <code>send-off</code> изнутри блока
+кода исполняемого агентом.  Для упрощения этой задачи, и чтобы сделать функции
+независимыми от конкретных названий переменных содержащих агенты, внутри блока кода можно
+использовать переменную <code>*agent*</code>, которая будет ссылаться на текущий агент.
+</p>
+</div>
+</div>
+<div id="outline-container-sec-3-3-2" class="outline-4">
+<h4 id="sec-3-3-2"><span class="section-number-4">3.3.2</span> Обработка ошибок</h4>
+<div class="outline-text-4" id="text-3-3-2">
+<p>
+Поскольку, в отличии от атомов и ссылок, агенты работают асинхронно, то необходима
+возможность как-то обрабатывать ошибки во время выполнения кода.  Как и для других
+примитивов, вы можете задать функцию-валидатор которая будет проверять состояние агента, и
+не разрешать "плохие" значения.
+</p>
+
+<p>
+Но кроме этого, ошибки могут возникать и по другим причинам, например, ошибки
+ввода/вывода, или какая-то из функций сгенерирует исключение.  В случае возникновения
+ошибки агент переходит в состояние "произошла ошибка" и все последующие вызовы <code>send</code>
+будут приводить к возврату первой ошибки.  Например:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">user=&gt; (<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">err-agent</span> (<span style="color: #483d8b;">agent</span> 1))
+#'user/err-agent
+user=&gt; (<span style="color: #483d8b;">send</span> err-agent (<span style="color: #a020f0;">fn</span> [_] (<span style="color: #a020f0;">throw</span> (<span style="color: #228b22;">Exception.</span> <span style="color: #8b2252;">"we have a problem!"</span>))))
+#&lt;Agent@8e7da60 FAILED: 1&gt;
+user=&gt; (<span style="color: #483d8b;">send</span> err-agent identity)
+<span style="color: #483d8b;">Exception</span> we have a problem!  user/eval1227/fn--1228 (form-init6590526999427540299.clj:1)
+</pre>
+</div>
+
+<p>
+Вы по прежнему сможете использовать последнее состояние (используя <code>deref</code>), которое было
+установлено перед возникновением ошибки.  С помощью функции <code>agent-error</code> вы можете
+получить исключение которое вызвало ошибку, и на основании этой информации принять решение
+о продолжении работы.  Вы также можете заново разрешить использование агента с ошибкой -
+используйте функцию <code>restart-agent</code> и передайте ей новое начальное состояние агента.  В том
+случае, если какие-то действия были в очереди этого агента, то они будут применены, но это
+не всегда желательно, так что <code>restart-agent</code> может принимать опциональный флаг
+<code>:clear-actions</code> со значением <code>true</code> - в этом случае все ожидающие действия будут удалены.
+</p>
+
+<p>
+Вы также можете просто игнорировать возникающие ошибки - для этого достаточно при создании
+агента указать флаг <code>:error-mode :continue</code> (значение по умолчанию равно
+<code>:error-mode :fail</code>).  Вы также можете указать функцию-обработчик ошибок - используя флаг
+<code>:error-handler</code> при создании агента, или с помощью функции <code>set-error-handler!</code>.  При
+использовании функции-обработчика ошибок у вас даже может быть возможность избирательного
+игнорирования ошибок, поскольку вы можете переключить агента в режим <code>:fail</code> с помощью
+функции <code>set-error-mode!</code>
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">user=&gt; (<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">err-agent</span> (<span style="color: #483d8b;">agent</span> 1 <span style="color: #008b8b;">:error-mode</span> <span style="color: #008b8b;">:continue</span>))
+#'user/err-agent
+user=&gt; (<span style="color: #483d8b;">send</span> err-agent (<span style="color: #a020f0;">fn</span> [_] (<span style="color: #a020f0;">throw</span> (<span style="color: #228b22;">Exception.</span> <span style="color: #8b2252;">"we have a problem!"</span>))))
+#&lt;Agent@76aa3e9a: 1&gt;
+user=&gt; (<span style="color: #483d8b;">send</span> err-agent inc)
+#&lt;Agent@76aa3e9a: 2&gt;
+user=&gt; @err-agent
+2
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-3-3-3" class="outline-4">
+<h4 id="sec-3-3-3"><span class="section-number-4">3.3.3</span> Ожидание окончания обработки и т.п.</h4>
+<div class="outline-text-4" id="text-3-3-3">
+<p>
+У вас могут быть ситуации когда вам необходимо дождаться завершения задач, посланных
+какому-то из агентов - например, если вы хотите выполнить корректное завершение приложения
+или т.п.  Для этого существует 2 функции <code>await</code> &amp; <code>await-for</code>.  Первая функция блокирует
+текущий поток выполнения до тех пор пока не завершаться все посланные задачи, кроме того
+она навсегда заблокирует выполнение в случае если агент находится в состоянии "ошибка" или
+он был перезапущен с очисткой очереди действий.  Чтобы избежать бесконечной блокировки,
+стоит воспользоваться второй функцией &#x2013; она принимает дополнительный параметр: сколько
+времени надо ждать, и если возник таймаут, то она возвращает <code>false</code>.
+</p>
+
+<p>
+В то время как функции <code>await</code> &amp; <code>await-for</code> работают с индивидуальными агентами, есть
+возможность остановить работу всех агентов разом &#x2013; просто вызовите функцию
+<code>shutdown-agents</code>, и пулы потоков используемых агентами выполнят все текущие задачи, но
+прекратят принимать новые задачи (стоит отметить, что этот же пул используется и для
+futures).
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-3-4" class="outline-3">
+<h3 id="sec-3-4"><span class="section-number-3">3.4</span> Vars (переменные)</h3>
+<div class="outline-text-3" id="text-3-4">
+<p>
+Вы уже встречались с vars в предыдущих лекциях.  Vars это не переменные в том смысле как
+они понимаются в других языках программирования.  Существует ограниченная возможность
+изменения vars: вы можете либо изменить базовое (top-level значение) &#x2013; для всех потоков
+выполнения, или изменить значение в конкретном потоке выполнения.
+</p>
+</div>
+
+<div id="outline-container-sec-3-4-1" class="outline-4">
+<h4 id="sec-3-4-1"><span class="section-number-4">3.4.1</span> Изменение vars для потока выполнения</h4>
+<div class="outline-text-4" id="text-3-4-1">
+<p>
+Иногда вам может понадобиться написать функции чье поведение может зависеть от какого-то
+глобального состояния?  Хорошим примером таких функций являются функции ввода/вывода,
+например, <code>print</code> и т.п., которые по умолчанию выводят данные на экран, но также могут
+использоваться для вывода в файлы.  Этого можно достичь, например, явно передавая имя
+канала вывода информации, но тогда вам придется явно писать <code>(print stdout XXX)</code> чтобы
+просто вывести что-то на экран.  Не очень-то и комфортно, и не особо гибко.  В текущей
+реализации функция <code>print</code> берет канал вывода из переменной <code>*out*</code>, который по умолчанию
+указывает на канал стандартного вывода (экран), но она также может указывать и на другие
+каналы вывода, такие как файл и т.п.
+</p>
+
+<p>
+В данном примере <code>*out*</code> &#x2013; динамическая переменная, которая может быть переопределена для
+конкретного потока выполнения, не затрагивая другие потоки выполнения.  Для динамических
+переменных существует специальное соглашение о именовании - они должны начинаться и
+заканчиваться символом звездочка, например, <code>*test-var*</code>.  Если вы попробуете определить
+обычную переменную с таким именем, то компилятор выдаст ошибку!  Но одного имени
+недостаточно &#x2013; переменная должна иметь флаг <code>:dynamic</code> в метаданных.
+</p>
+
+<p>
+После того, как вы создадите динамическую переменную, вы можете изменять ее значение для
+текущего потока выполнения - для этого имеется макрос <code>binding</code>, по синтаксису аналогичный
+<code>let</code>, но который устанавливает новые значения для указанных динамических переменных.
+Изменения сделанные с помощью <code>binding</code> будут видны в коде находящегося внутри <code>binding</code>,
+включая и вызываемые функции.
+</p>
+
+<p>
+Давайте посмотрим как это работает:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">def</span> <span style="color: #008b8b;">^:dynamic</span> <span style="color: #0000ff;">*test-var*</span> 20)
+
+(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">add-to-var</span> [num]
+   (<span style="color: #483d8b;">+</span> num *test-var*)
+
+(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">print-var</span> [txt]
+   (<span style="color: #483d8b;">println</span> txt *test-var*))
+
+(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">run-thread</span> [x]
+  (<span style="color: #483d8b;">.run</span> (<span style="color: #a020f0;">fn</span> []
+            (print-var (<span style="color: #483d8b;">str</span> <span style="color: #8b2252;">"Thread "</span> x <span style="color: #8b2252;">" before:"</span>))
+            (<span style="color: #a020f0;">binding</span> [*test-var* (<span style="color: #483d8b;">rand-int</span> 10000)]
+              (print-var (<span style="color: #483d8b;">str</span> <span style="color: #8b2252;">"Thread "</span> x <span style="color: #8b2252;">" after:"</span>))))))
+
+user=&gt; (<span style="color: #a020f0;">doseq</span> [x (<span style="color: #483d8b;">range</span> 3)] (run-thread x))
+<span style="color: #483d8b;">Thread</span> 0 before: 20
+<span style="color: #483d8b;">Thread</span> 0 after: 6955
+<span style="color: #483d8b;">Thread</span> 1 before: 20
+<span style="color: #483d8b;">Thread</span> 1 after: 7022
+<span style="color: #483d8b;">Thread</span> 2 before: 20
+<span style="color: #483d8b;">Thread</span> 2 after: 3380
+</pre>
+</div>
+
+<p>
+Если вы хотите изменить значение которое было уже переопределено с помощью <code>binding</code>, вы
+можете воспользоваться функциями <code>set!</code> или <code>var-set</code>. Например:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">run-thread2</span> [x]
+  (<span style="color: #483d8b;">.run</span> (<span style="color: #a020f0;">fn</span> []
+          (<span style="color: #a020f0;">binding</span> [*test-var* (<span style="color: #483d8b;">rand-int</span> 10000)]
+            (<span style="color: #483d8b;">println</span> <span style="color: #8b2252;">"Thread "</span> x <span style="color: #8b2252;">" var="</span> *test-var*)
+            (set! *test-var* (<span style="color: #483d8b;">rand-int</span> 10000))
+            (<span style="color: #483d8b;">println</span> <span style="color: #8b2252;">"Thread "</span> x <span style="color: #8b2252;">" var2="</span> *test-var*)))))
+
+user=&gt; (<span style="color: #a020f0;">doseq</span> [x (<span style="color: #483d8b;">range</span> 3)] (run-thread2 x))
+<span style="color: #483d8b;">Thread</span> 0 var= 3693
+<span style="color: #483d8b;">Thread</span> 0 var2= 4408
+<span style="color: #483d8b;">Thread</span> 1 var= 3438
+<span style="color: #483d8b;">Thread</span> 1 var2= 2624
+<span style="color: #483d8b;">Thread</span> 2 var= 6193
+<span style="color: #483d8b;">Thread</span> 2 var2= 2265
+</pre>
+</div>
+
+<p>
+Мы можем использовать <code>set!</code> для установки значений, которые уже переопределены с помощью
+<code>binding</code>, но мы не можем это сделать напрямую:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">run-thread3</span> [x]
+  (<span style="color: #483d8b;">.run</span> (<span style="color: #a020f0;">fn</span> []
+          (set! *test-var* (<span style="color: #483d8b;">rand-int</span> 10000))
+          (<span style="color: #483d8b;">println</span> <span style="color: #8b2252;">"Thread "</span> x <span style="color: #8b2252;">" var2="</span> *test-var*))))
+user=&gt; (run-thread3 10)
+java.lang.IllegalStateException: <span style="color: #483d8b;">Can</span>'t change/establish root binding of: *test-var* with set
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-3-4-2" class="outline-4">
+<h4 id="sec-3-4-2"><span class="section-number-4">3.4.2</span> Изменение базового (top-level) значения var</h4>
+<div class="outline-text-4" id="text-3-4-2">
+<p>
+В некоторых случаях нам может понадобиться изменить "базовое" значение переменной - на
+этот случай у нас есть функция <code>alter-var-root</code> которая берет переменную, и применяет к
+ней указанную функцию:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">user=&gt; *test-var*
+20
+user=&gt; (<span style="color: #483d8b;">alter-var-root</span> #'*test-var* (<span style="color: #483d8b;">constantly</span> 10))
+10
+user=&gt; *test-var*
+10
+</pre>
+</div>
+
+<p>
+Заметьте, как мы передаем переменную &#x2013; мы не можем просто указать <code>*test-var*</code>, поскольку
+прямое использование приведет к возврату значения хранящегося в этой переменной, а не
+самой переменной.  Мы используем макрос процедуры чтения <code>#'var-name</code>, и это аналогично
+прямому вызову функции <code>(var var-name)</code>.  Также, <code>alter-var-root</code> не присваивает значение
+напрямую, а получает функцию, которая будет применена к текущему значению.
+</p>
+
+<p>
+Существует еще несколько функций и макросов, которые позволяют временно изменить базовое
+значение &#x2013; <code>with-redefs</code> &amp; <code>with-redefs-fn</code>.  Эти макросы в основном используются в
+тестах, для временного переопределения функций и переменных.
+</p>
+</div>
+</div>
+<div id="outline-container-sec-3-4-3" class="outline-4">
+<h4 id="sec-3-4-3"><span class="section-number-4">3.4.3</span> Локальные переменные</h4>
+<div class="outline-text-4" id="text-3-4-3">
+<p>
+Кроме того, поддерживается возможность использования локальных переменных в "императивном"
+коде.  Для этого, определен макрос <code>with-local-vars</code>, который позволяет определить
+несколько переменных и работать с ними с помощью <code>var-get</code> (или <code>@</code>) &amp; <code>var-set</code>.  Хотя
+это не самый лучший способ использования Clojure.
+</p>
+
+<p>
+В качестве примера можно привести императивную реализацию факториала (пример с
+<a href="http://clojuredocs.org/clojure_core/1.2.0/clojure.core/with-local-vars">clojuredocs</a>):
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">factorial</span> [x]
+  (<span style="color: #a020f0;">with-local-vars</span> [acc 1, cnt x]
+    (<span style="color: #483d8b;">while</span> (<span style="color: #483d8b;">&gt;</span> @cnt 0)
+      (<span style="color: #483d8b;">var-set</span> acc (<span style="color: #483d8b;">*</span> @acc @cnt))
+      (<span style="color: #483d8b;">var-set</span> cnt (<span style="color: #483d8b;">dec</span> @cnt)))
+    @acc))
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-3-5" class="outline-3">
+<h3 id="sec-3-5"><span class="section-number-3">3.5</span> Валидаторы и наблюдатели</h3>
+<div class="outline-text-3" id="text-3-5">
+<p>
+Ссылки, атомы, агенты и vars имеют общую функциональность - возможность задания
+функций-валидаторов для проверки значений устанавливаемых в процессе изменения, а также
+возможность задания функций-наблюдателей которые будут вызываться при изменении значений.
+</p>
+
+<p>
+Функции-валидаторы могут использоваться с ссылками, агентами, атомами и vars.
+Функция-валидатор будет получать каждое новое устанавливаемое состояние и должна вернуть
+<code>false</code> или сгенерировать исключение если состояние неприемлемо.  Функция-валидатор
+принимает только один параметр, и не должна иметь побочных эффектов.  Например:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">user=&gt; (<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">a</span> (<span style="color: #483d8b;">atom</span> 2))
+user=&gt; (<span style="color: #483d8b;">set-validator!</span> a pos?)
+user=&gt; (<span style="color: #483d8b;">swap!</span> a dec)
+1
+user=&gt; (<span style="color: #483d8b;">swap!</span> a dec)
+<span style="color: #483d8b;">IllegalStateException</span> <span style="color: #483d8b;">Invalid</span> reference state  <span style="color: #483d8b;">clojure.lang.ARef.validate</span> (ARef.java:33)
+</pre>
+</div>
+
+<p>
+Вы можете установить функцию-валидатор 2-мя способами: используя функцию <code>set-validator!</code>
+передав ей объект и функцию-валидатор (или <code>nil</code> если вы хотите убрать валидатор), или
+используя параметр <code>:validator</code> при создании объекта (для всех кроме vars).  В момент
+установки, функция-валидатор будет вызвана для текущего состояния объекта, и в том случае
+если оно не прошло проверку, то будет сгенерировано исключение и функция-валидатор не
+будет установлена.  Вы также можете получить текущую функцию-валидатор с помощью
+<code>get-validator</code> &#x2013; это полезно в тех случаях, когда вы хотите временно изменить
+функцию-валидатор.
+</p>
+
+<p>
+Кроме задания функций-валидаторов, вы также можете задать и функции-наблюдатели, которые
+также будут вызваны при изменении данных.  В отличии от функций-валидаторов, вы можете
+задать сколько угодно функций-наблюдателей для одного объекта.  
+</p>
+
+<p>
+Добавление функции-наблюдателя производится с помощью функции <code>add-watch</code> - ей передается
+3 параметра: объект к которому надо добавить функцию-наблюдатель, уникальный идентификатор
+для данной функции, а также саму функцию-наблюдатель.  
+</p>
+
+<p>
+Функция-наблюдатель принимает 4 параметра:  уникальный идентификатор функции-наблюдателя,
+объект к которому она применена, а также старое и новое состояние объекта.  Самый
+последний параметр нужен, поскольку состояние объекта может измениться в промежутке между
+изменением и вызовом функции.  
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">user=&gt; (<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">a</span> (<span style="color: #483d8b;">atom</span> 1))
+#'user/a
+user=&gt; (add-watch a <span style="color: #8b2252;">"watch 1: "</span> (<span style="color: #a020f0;">fn</span> [k r o n] (<span style="color: #483d8b;">println</span> k r o n)))
+#&lt;Atom@2b36b44e: 1&gt;
+user=&gt; (add-watch a <span style="color: #8b2252;">"watch 2: "</span> (<span style="color: #a020f0;">fn</span> [k r o n] (<span style="color: #483d8b;">println</span> k r o n)))
+#&lt;Atom@2b36b44e: 1&gt;
+user=&gt; (<span style="color: #483d8b;">swap!</span> a inc)
+watch 1:  #&lt;Atom@2b36b44e: 2&gt; 1 2
+watch 2:  #&lt;Atom@2b36b44e: 2&gt; 1 2
+2
+user=&gt; (remove-watch a <span style="color: #8b2252;">"watch 1: "</span>)
+#&lt;Atom@372d95a: 1&gt;
+user=&gt; (<span style="color: #483d8b;">swap!</span> a inc)
+watch 2:  #&lt;Atom@372d95a: 2&gt; 1 2
+2
+</pre>
+</div>
+
+<p>
+Для агентов, функция-наблюдатель вызывается синхронно в контексте выполнения потока
+агента.  Для vars функция-наблюдатель будет вызвана только в том случае, когда изменяется
+"базовое значение", а не в потоке выполнения.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">user=&gt; (<span style="color: #a020f0;">def</span> <span style="color: #008b8b;">^:dynamic</span> <span style="color: #0000ff;">b</span> 1)
+user=&gt; (add-watch (var b) <span style="color: #8b2252;">"dynamic: "</span> (<span style="color: #a020f0;">fn</span> [k r o n] (<span style="color: #483d8b;">println</span> k r o n)))
+user=&gt; (<span style="color: #483d8b;">alter-var-root</span> (var b) (<span style="color: #483d8b;">constantly</span> 42))
+dynamic:  #'user/b 1 42
+42
+user=&gt; (<span style="color: #a020f0;">binding</span> [b 10] (<span style="color: #483d8b;">println</span> b))
+10
+nil
+</pre>
+</div>
+
+<p>
+Если вам больше не нужна функция-наблюдатель, то вы можете удалить ее с помощью функции
+<code>remove-watch</code>, которой надо передать объект и уникальный идентификатор, который был
+передан при добавлении наблюдателя.
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-3-6" class="outline-3">
+<h3 id="sec-3-6"><span class="section-number-3">3.6</span> Advanced topics</h3>
+<div class="outline-text-3" id="text-3-6">
+<p>
+Помимо описанных выше методов работы с изменяемыми данными, имеются и другие конструкции.
+Я вкратце расскажу про transients &amp; изменяемые поля в <code>deftype</code>, но на самом деле имеются
+и другие средства, например, библиотека <code>proteus</code> созданная Zachary Tellman.
+</p>
+</div>
+
+<div id="outline-container-sec-3-6-1" class="outline-4">
+<h4 id="sec-3-6-1"><span class="section-number-4">3.6.1</span> Transients</h4>
+<div class="outline-text-4" id="text-3-6-1">
+<p>
+При интенсивной работе с неизменяемыми коллекциями иногда возникает слишком много
+промежуточных объектов, что достаточно неэффективно.  Начиная с версии 1.1 появилась
+возможность временно использовать изменяемые коллекции данных используя переходные
+(transient) структуры данных.  
+</p>
+
+<p>
+Основная идея заключается в том, чтобы избежать ненужного копирования данных, что
+происходит когда вы работаете с неизменяемыми данными.  В общем виде работа с переходными
+структурами данных происходит следующим образом (поддерживаются вектора, отображения и
+множества):
+</p>
+<ul class="org-ul">
+<li>вы преобразуете стандартную структуру данных в переходную структуру (вектор,
+отображение и т.д.) с помощью функции <code>transient</code> принимающую соответствующую структуру
+данных;
+</li>
+<li>выполняете изменение структуры по месту (inplace) с помощью специальных функций <code>assoc!</code>,
+<code>conj!</code> и т.п., которые аналогичны по действию соответствующим функциям, но без символа <code>!</code>,
+но применяются только к переходным структурам данных;
+</li>
+<li>после окончания обработки, превращаете переходную структуру данных в стандартную,
+неизменяемую структуру данных с помощью функции <code>persistent!</code>.
+</li>
+</ul>
+
+<p>
+Вот небольшой пример пример использования переходных структур данных:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">vrange</span> [n]
+  (<span style="color: #a020f0;">loop</span> [i 0 v []]
+    (<span style="color: #a020f0;">if</span> (<span style="color: #483d8b;">&lt;</span> i n)
+      (<span style="color: #a020f0;">recur</span> (<span style="color: #483d8b;">inc</span> i) (<span style="color: #483d8b;">conj</span> v i))
+      v)))
+
+(<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">vrange2</span> [n]
+  (<span style="color: #a020f0;">loop</span> [i 0 v (<span style="color: #483d8b;">transient</span> [])]
+    (<span style="color: #a020f0;">if</span> (<span style="color: #483d8b;">&lt;</span> i n)
+      (<span style="color: #a020f0;">recur</span> (<span style="color: #483d8b;">inc</span> i) (<span style="color: #483d8b;">conj!</span> v i))
+      (<span style="color: #483d8b;">persistent!</span> v))))
+</pre>
+</div>
+
+<p>
+Первая функция использует стандартные, неизменяемые структуры данных, а во второй &#x2013;
+переходные структуры данных.  В то время как вторая - использует переходные структуры.
+Если мы запустим обе функции с одинаковыми параметрами, то мы получим следующие
+результаты:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">user&gt; (<span style="color: #483d8b;">time</span> (<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">v</span> (vrange 1000000)))
+<span style="color: #8b2252;">"Elapsed time: 189.004 msecs msecs"</span>
+user&gt; (<span style="color: #483d8b;">time</span> (<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">v2</span> (vrange2 1000000)))
+<span style="color: #8b2252;">"Elapsed time: 99.861 msecs"</span>
+</pre>
+</div>
+
+<p>
+Как видно из этого примера, использование переходных структур может дать выигрыш в
+производительности.  На некоторых структурах данных выигрыш в производительности может
+быть больше. Копирование исходных данных и создание неизменяемой структуры &#x2013; это операции
+со сложностью O(1), при этом происходит эффективное использование оригинальных данных.
+Также стоит отметить, что использование переходных структур данных приводит к
+принудительной изоляции потока выполнения &#x2013; изменяемые данные становятся недоступными из
+других потоков выполнения.
+</p>
+</div>
+</div>
+<div id="outline-container-sec-3-6-2" class="outline-4">
+<h4 id="sec-3-6-2"><span class="section-number-4">3.6.2</span> Изменяемые поля в <code>deftype</code></h4>
+<div class="outline-text-4" id="text-3-6-2">
+<p>
+<code>deftype</code> может использоваться для создания достаточно низкоуровневых (и
+высокопроизводительных) типов данных, поэтому кроме стандартных, неизменяемых полей, в них
+также можно определять модифицируемые поля.  Для этого поле должно быть обозначено как
+<code>:volatile-mutable</code> или <code>:unsynchronized-mutable</code>, и тогда для них можно применять
+операцию <code>set!</code> &#x2013; но это можно делать только внутри функций определенных для <code>deftype</code> &#x2013;
+все изменяемые поля становятся приватными.  Но вам это не понадобится для практически всех
+программ - я сам применял их один или два раза, и то, больше экспериментировал с этой
+возможностью.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">defprotocol</span> <span style="color: #0000ff;">TestProtocol</span>
+  (get-data [this])
+  (set-data [this o]))
+
+(<span style="color: #a020f0;">deftype</span> <span style="color: #0000ff;">Test</span> [<span style="color: #008b8b;">^:unsynchronized-mutable</span> x-var]
+  <span style="color: #483d8b;">TestProtocol</span>
+  (set-data [this o] (set! x-var o))
+  (get-data [this] x-var)
+  )
+
+=&gt; (<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">a</span> (<span style="color: #228b22;">Test.</span> 10))
+=&gt; (get-data a)
+10
+=&gt; (set-data a 42)
+=&gt; (get-data a)
+42
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4"><span class="section-number-2">4</span> Параллельное и конкурентное программирование</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+Но поддержка конкурентного и параллельного программирования в Clojure не ограничивается
+только ссылками, агентами, атомами и vars.  Имеется набор средств для параллельного
+выполнения кода, координации между потоками выполнения, отложенного выполнения кода, и
+т.п.  Кроме того, Clojure предоставляет полный доступ к средствам, реализованным в Java
+(треды, локи), включая также некоторые высокоуровневые конструкции в самом языке.
+</p>
+</div>
+
+<div id="outline-container-sec-4-1" class="outline-3">
+<h3 id="sec-4-1"><span class="section-number-3">4.1</span> Параллельное выполнение кода</h3>
+<div class="outline-text-3" id="text-4-1">
+<p>
+В стандартной библиотеке имеется несколько функций предназначенных для параллельного
+выполнения кода (стоит отметить что эти функции реализованы на базе <code>future</code> которые будут
+обсуждаться далее):
+</p>
+<ul class="org-ul">
+<li><code>pmap</code> &#x2013; это параллельный вариант функции <code>map</code>, который может использоваться в тех
+случаях, когда функция-параметр не имеет побочных эффектов, и требует достаточно
+больших затрат на вычисление &#x2013; эти затраты должны быть больше чем затраты на запуск
+нового потока, иначе ваши параллельные вычисления будут медленнее чем последовательное
+выполнение в <code>map</code>.  Подобно <code>map</code>, эта функция является полу-ленивой &#x2013; она не
+вычисляет результат полностью, но будет вычислять части результата по мере надобности.
+</li>
+<li>Функция <code>pcalls</code> позволяет вычислить результат нескольких функций (которые не принимают
+аргументы) в параллельном режиме, возвращая ленивую последовательность их результатов в
+качестве результата выполнения функции.
+</li>
+<li>Функция <code>pvalues</code> похожа на <code>pcalls</code>, но только вы указываете не функции, а выражения.
+В остальном, поведение точно такое же.
+</li>
+</ul>
+
+<p>
+Давайте рассмотрим несколько примеров.  Например, для <code>pmap</code>, если мы определим следующую
+"медленную" функцию, и применим ее к последовательности используя <code>map</code> &amp; <code>pmap</code>.  В
+первом случае, функция будет выполнена за 12 секунд (4 элемента x 3 секунды задержки), в
+то время как во втором случае, функция будет выполнена примерно за 3 секунды - за счет
+параллельного выполнения кода (заметьте, что нам нужно использовать <code>doall</code> чтобы
+заставить Clojure вычислить результат).
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">user=&gt; (<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">long-running-job</span> [n]
+          (<span style="color: #483d8b;">Thread/sleep</span> 3000)
+          (<span style="color: #483d8b;">+</span> n 10))
+
+user=&gt; (<span style="color: #483d8b;">time</span> (<span style="color: #a020f0;">doall</span> (<span style="color: #483d8b;">map</span> long-running-job (<span style="color: #483d8b;">range</span> 4))))
+<span style="color: #8b2252;">"Elapsed time: 12000.662614 msecs"</span>
+(10 11 12 13)
+user=&gt; (<span style="color: #483d8b;">time</span> (<span style="color: #a020f0;">doall</span> (<span style="color: #483d8b;">pmap</span> long-running-job (<span style="color: #483d8b;">range</span> 4))))
+<span style="color: #8b2252;">"Elapsed time: 3001.826403 msecs"</span>
+(10 11 12 13)
+</pre>
+</div>
+
+<p>
+А вот небольшой пример для <code>pvalues</code>:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">user=&gt; (<span style="color: #483d8b;">time</span> (<span style="color: #a020f0;">doall</span> (<span style="color: #483d8b;">pvalues</span> 
+                       (<span style="color: #a020f0;">do</span> (<span style="color: #483d8b;">Thread/sleep</span> 3000) 1) 
+                       (<span style="color: #a020f0;">do</span> (<span style="color: #483d8b;">Thread/sleep</span> 3000) 2) 
+                       (<span style="color: #a020f0;">do</span> (<span style="color: #483d8b;">Thread/sleep</span> 3000) 3))))
+<span style="color: #8b2252;">"Elapsed time: 3000.826403 msecs"</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-4-2" class="outline-3">
+<h3 id="sec-4-2"><span class="section-number-3">4.2</span> Futures</h3>
+<div class="outline-text-3" id="text-4-2">
+<p>
+<code>future</code> позволяет программисту выделить некоторый код в отдельный поток выполнения,
+который выполняется параллельно с основным кодом.  Результат выполнения <code>future</code> затем
+сохраняется, и может быть получен с помощью операции <code>deref</code> (<code>@</code>).  Эта операция может
+заблокировать выполнение основного кода, если работа <code>future</code> еще не завершилась &#x2013; в этом
+<code>future</code> похож на <code>promise</code>, который описан ниже.  Значение, установленное при выполнении
+<code>future</code> сохраняется, и при последующих обращениях к нему, возвращается сразу, без
+вычисления.  Рассмотрим простой пример:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">user=&gt; (<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">future-test</span> 
+            (<span style="color: #483d8b;">future</span> (<span style="color: #a020f0;">do</span> (<span style="color: #483d8b;">Thread/sleep</span> 10000) 
+                    <span style="color: #008b8b;">:finished</span>)))
+user=&gt; @future-test <span style="color: #7f7f7f;">;; </span><span style="color: #7f7f7f;">&#1073;&#1091;&#1076;&#1077;&#1090; &#1078;&#1076;&#1072;&#1090;&#1100; &#1087;&#1086;&#1082;&#1072; &#1074;&#1099;&#1088;&#1072;&#1078;&#1077;&#1085;&#1080;&#1077; &#1085;&#1077; &#1074;&#1099;&#1095;&#1080;&#1089;&#1083;&#1080;&#1090;&#1089;&#1103;</span>
+<span style="color: #008b8b;">:finished</span>
+user=&gt; @future-test <span style="color: #7f7f7f;">;; </span><span style="color: #7f7f7f;">&#1089;&#1088;&#1072;&#1079;&#1091; &#1074;&#1077;&#1088;&#1085;&#1077;&#1090; &#1079;&#1085;&#1072;&#1095;&#1077;&#1085;&#1080;&#1077;</span>
+<span style="color: #008b8b;">:finished</span>
+</pre>
+</div>
+
+<p>
+Тут создается объект <code>future</code>, в котором выполняется задержка на 10 секунд, а затем
+устанавливается значение <code>:finished</code>.  Если мы обратимся к объекту <code>future-test</code> до
+завершения операции, то мы будем ожидать завершения указанного блока кода.
+</p>
+
+<p>
+Для работы с futures имеется много дополнительных функций:
+</p>
+<ul class="org-ul">
+<li>с помощью функций <code>future-done?</code> или <code>realized?</code> (эта функция работает также и для
+delays &amp; promises) вы можете проверить закончилось ли выполнение кода &#x2013; это позволяет
+избежать блокирования в случае обращения к еще не закончившейся операции.
+</li>
+<li>с помощью функции <code>future-cancel</code> вы можете отменить выполнение кода
+</li>
+<li>с помощью функции <code>future-cancelled?</code> &#x2013; проверить, не была ли отменена операция
+</li>
+<li><code>future?</code> позволяет вам проверить - не является ли данный объект future
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-4-3" class="outline-3">
+<h3 id="sec-4-3"><span class="section-number-3">4.3</span> Delays</h3>
+<div class="outline-text-3" id="text-4-3">
+<p>
+Существуют ситуации, когда нам надо произвести обработку данных, но некоторые результаты
+(например, мы возвращаем сложную структуру данных) не всегда используются, так что не
+стоит тратить время на их вычисление.  Для этого, в Clojure (также как и в других языках)
+имеется возможность создания delays, когда выполнение кода откладывается до момента когда
+нам нужен результат.  После того, как код будет выполнен, его результат будет закеширован
+и все последующие обращения к delay, будут возвращать этот результат (также как и в
+futures).
+</p>
+
+<p>
+Создать delay очень просто &#x2013; оберните нужные выражения в макрос <code>delay</code>, и присвойте его
+какой-либо переменной (или верните вместе с другими результатами).  Если вам понадобится
+значение, то воспользуйтесь <code>@</code> или <code>deref</code> чтобы извлечь его из <code>delay</code>.
+</p>
+
+<p>
+Если вы хотите проверить, был ли результат уже вычислен, то вы можете воспользоваться
+функцией <code>realized?</code>, которая вернет <code>true</code> если вычисление уже было завершено.  Кроме
+того, вы также можете форсировать вычисление delay с помощью функции <code>force</code>.
+</p>
+
+<p>
+Вот небольшой пример использования delays:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">user=&gt; (<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">use-delays</span> [x]
+         {<span style="color: #008b8b;">:result</span> (<span style="color: #483d8b;">delay</span> (<span style="color: #483d8b;">println</span> <span style="color: #8b2252;">"Evaluating result..."</span> x) x)
+          <span style="color: #008b8b;">:some-info</span> true})
+
+user=&gt; (<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">a</span> (use-delays 10))
+user=&gt; a
+{<span style="color: #008b8b;">:result</span> #&lt;Delay@259c3236: <span style="color: #008b8b;">:pending&gt;</span>, <span style="color: #008b8b;">:some-info</span> true}
+user=&gt; @(<span style="color: #008b8b;">:result</span> a) <span style="color: #7f7f7f;">;; </span><span style="color: #7f7f7f;">&#1074;&#1099;&#1087;&#1086;&#1083;&#1085;&#1103;&#1077;&#1090;&#1089;&#1103; &#1074;&#1077;&#1089;&#1100; &#1082;&#1086;&#1076; delay</span>
+<span style="color: #483d8b;">Evaluating</span> result... 10
+10
+user=&gt; @(<span style="color: #008b8b;">:result</span> a) <span style="color: #7f7f7f;">;; </span><span style="color: #7f7f7f;">&#1074;&#1086;&#1079;&#1074;&#1088;&#1072;&#1097;&#1072;&#1077;&#1090;&#1089;&#1103; &#1090;&#1086;&#1083;&#1100;&#1082;&#1086; &#1088;&#1077;&#1079;&#1091;&#1083;&#1100;&#1090;&#1072;&#1090;</span>
+10
+user=&gt; (<span style="color: #008b8b;">:result</span> a)
+&lt;Delay@259c3236: 10&gt;
+</pre>
+</div>
+
+<p>
+В данном случае, поле <code>:result</code> будет вычислено только когда это потребуется.   Как вы
+видите, вычисление произойдет только один раз, а затем только конечный результат будет
+возвращен пользователю.
+</p>
+</div>
+</div>
+<div id="outline-container-sec-4-4" class="outline-3">
+<h3 id="sec-4-4"><span class="section-number-3">4.4</span> Promises</h3>
+<div class="outline-text-3" id="text-4-4">
+<p>
+Иногда возникают ситуации, когда один поток исполнения должен передать какие-то данные
+другому.  Это может быть организовано с помощью <code>promise</code>.  Общая схема работы следующая:
+в одном потоке выполнения вы создаете некоторый объект с помощью <code>promise</code>, выполняете
+работу и затем с помощью <code>deliver</code> устанавливаете значение объекта.  Результат,
+сохраненный в объекте, может быть получен с помощью операции <code>deref</code> (краткая форма <code>@</code>) и
+не может быть изменен после установки с помощью <code>deliver</code>. 
+</p>
+
+<p>
+ Но если вы попробуете обратиться к значению, сохраненному в объекте, до того, как оно
+будет установлено, то ваш поток выполнения будет заблокирован, и возобновит работу только
+после установки значения.  Однако после того как значение было установлено, его получение
+будет производиться уже без выполнения кода, использующегося для его вычисления.
+</p>
+
+<p>
+Вот небольшой пример:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">p</span> (<span style="color: #483d8b;">promise</span>))
+(<span style="color: #a020f0;">do</span> (<span style="color: #483d8b;">future</span>
+     (<span style="color: #483d8b;">Thread/sleep</span> 5000)
+     (<span style="color: #483d8b;">deliver</span> p <span style="color: #008b8b;">:fred</span>))
+ @p)
+</pre>
+</div>
+
+<p>
+В первой строке мы создаем объект <code>p</code>, который затем используется для синхронизации в блоке
+<code>do</code>.  Если мы выполним код в блоке <code>do</code>, то выполнение затормозится на 5 секунд, поскольку
+поток выполнения, созданный <code>future</code>, еще не установил значение.  А после окончания ожидания
+и установки значения с помощью <code>deliver</code>, операция <code>@p</code> сможет получить установленное значение
+равное <code>:fred</code>.  Если мы попробуем выполнить операцию <code>@p</code> еще раз, то мы сразу получим
+установленное значение.
+</p>
+
+<p>
+Чтобы избежать блокировки если значение еще не установлено, вы можете воспользоваться
+функцией <code>realized?</code> которая вернет <code>true</code> только если значение уже было установлено
+(также как и для futures &amp; delays).
+</p>
+</div>
+</div>
+<div id="outline-container-sec-4-5" class="outline-3">
+<h3 id="sec-4-5"><span class="section-number-3">4.5</span> Блокировки</h3>
+<div class="outline-text-3" id="text-4-5">
+<p>
+Также как в и в других языках программирования, Clojure имеет в своем арсенале и
+низкоуровневые средства поддержки конкурентного программирования.  Например, имеется
+макрос <code>locking</code> который позволяет ограничить доступ к указанному объекту во время
+выполнения кода внутри этого макроса.  В этом он аналогичен <code>synchronized</code> блокам в Java,
+или локам в других языках.  Например:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">=&gt; (<span style="color: #a020f0;">defn</span> <span style="color: #0000ff;">add-to-map</span> [h k v]
+     (<span style="color: #483d8b;">locking</span> h
+        (<span style="color: #483d8b;">.put</span> h k v)))
+
+=&gt; (<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">h</span> (<span style="color: #483d8b;">java.util.HashMap.</span>))
+=&gt; (add-to-map h <span style="color: #8b2252;">"test"</span> <span style="color: #8b2252;">"value"</span>)
+<span style="color: #8b2252;">"value"</span>
+=&gt; h
+{<span style="color: #8b2252;">"test"</span> <span style="color: #8b2252;">"value"</span>}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-4-6" class="outline-3">
+<h3 id="sec-4-6"><span class="section-number-3">4.6</span> Средства JVM</h3>
+<div class="outline-text-3" id="text-4-6">
+<p>
+Поскольку в своем арсенале Clojure имеет развитые средства для работы с JVM, то
+использование средств Java (например, из пакетов <code>java.util.concurrency</code>) не представляет
+никакой проблемы &#x2013; вы просто создаете нужные объекты и используете их.  Другой вопрос &#x2013;
+насколько это нужно, но это зависит от ситуации &#x2013; вы должны четко понимать как и зачем их
+использовать.
+</p>
+
+<p>
+В Java определены интерфейсы <code>Runnable</code> &amp; <code>Callable</code>, которые могут быть реализованы
+объектами которые будут выполняться в отдельных потоках выполнения используя объекты
+класса <code>Thread</code>.  Clojure реализует эти интерфейсы для всех функций без параметров, так
+что вы можете запускать их напрямую, без каких-либо дополнительных действий с вашей
+стороны:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">=&gt; (<span style="color: #483d8b;">.run</span> (<span style="color: #228b22;">Thread.</span> #(<span style="color: #483d8b;">println</span> <span style="color: #8b2252;">"Hello world!"</span>)))
+<span style="color: #483d8b;">Hello</span> world!
+nil
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5"><span class="section-number-2">5</span> Advanced topics</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+Помимо описанных выше встроенных средств Clojure, имеется и достаточно большое количество
+библиотек, которые также имеют отношение к конкурентному и параллельному
+программированию.  В данном разделе я хочу коротко описать некоторые из них, просто чтобы
+вы имели представление о их существовании.
+</p>
+
+<p>
+<a href="http://adambard.com/blog/clojure-concurrency-smorgasbord/">http://adambard.com/blog/clojure-concurrency-smorgasbord/</a>
+</p>
+</div>
+
+<div id="outline-container-sec-5-1" class="outline-3">
+<h3 id="sec-5-1"><span class="section-number-3">5.1</span> Reducers</h3>
+<div class="outline-text-3" id="text-5-1">
+<p>
+Reducers &#x2013; сравнительно недавно появились в Clojure (в версии 1.5).  Входящая в состав
+стандартной поставки библиотека <code>clojure.core.reducers</code> реализует свои версии функций
+<code>fold</code>, <code>map</code>, <code>filter</code>, и т.п., так что лучше использовать <code>require</code> для подключения этой
+библиотеки &#x2013; чтобы избежать конфликтов с реализацией в <code>clojure.core</code>.
+</p>
+
+<p>
+При использовании reducers для сложной обработки данных не происходит создания
+промежуточных коллекций, что приводит к некоторому ускорению обработки данных.  Но
+основное ускорение происходит при использовании функции <code>fold</code>, которая использует
+fork/join для параллелизации обработки данных (если функция ассоциативная).
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">=&gt; (<span style="color: #483d8b;">require</span> '[clojure.core.reducers <span style="color: #008b8b;">:as</span> r])
+=&gt; (<span style="color: #483d8b;">use</span> 'criterium.core)
+
+=&gt; (bench (<span style="color: #483d8b;">reduce</span> + (<span style="color: #483d8b;">map</span> inc v)))
+<span style="color: #7f7f7f;">; </span><span style="color: #7f7f7f;">Execution time mean : 7.793994 ms</span>
+=&gt; (bench (r/reduce + (r/map inc v)))
+<span style="color: #7f7f7f;">; </span><span style="color: #7f7f7f;">Execution time mean : 5.604963 ms</span>
+=&gt; (bench (r/fold + (r/map inc v)))
+<span style="color: #7f7f7f;">; </span><span style="color: #7f7f7f;">Execution time mean : 2.095184 ms</span>
+</pre>
+</div>
+
+<p>
+Как вы видите, использование reducers (без <code>fold</code>) уже дает ускорение работы кода, если мы
+воспользуемся <code>fold</code>, то код работает почти в 4 раза быстрее (конечно, это зависит от
+hardware).
+</p>
+
+<p>
+Вот немного ресурсов на эту тему:
+</p>
+<ul class="org-ul">
+<li><a href="http://clojure.com/blog/2012/05/08/reducers-a-library-and-model-for-collection-processing.html">http://clojure.com/blog/2012/05/08/reducers-a-library-and-model-for-collection-processing.html</a>
+</li>
+<li><a href="http://clojure.com/blog/2012/05/15/anatomy-of-reducer.html">http://clojure.com/blog/2012/05/15/anatomy-of-reducer.html</a>
+</li>
+<li><a href="http://adambard.com/blog/clojure-reducers-for-mortals/">http://adambard.com/blog/clojure-reducers-for-mortals/</a>
+</li>
+<li><a href="http://www.infoq.com/presentations/Clojure-Reducers">http://www.infoq.com/presentations/Clojure-Reducers</a>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-5-2" class="outline-3">
+<h3 id="sec-5-2"><span class="section-number-3">5.2</span> Core.async</h3>
+<div class="outline-text-3" id="text-5-2">
+<p>
+Библиотека core.async не входит (пока?) в стандартную поставку, но уже достаточно зрелая
+для использования в проектах.  Библиотека реализует асинхронное программирование через
+использование каналов, нечто подобное goroutines в Go.  Одним из достоинств этой
+библиотеки является то, что она может использоваться как для Clojure, так и для
+ClojureScript.    
+</p>
+
+<p>
+Вы можете запустить множество блоков кода, которые будут работать параллельно, а затем
+собрать результат.  Больше информации вы можете найти в следующих ресурсах:
+</p>
+
+<p>
+Статьи:
+</p>
+<ul class="org-ul">
+<li><a href="http://clojure.com/blog/2013/06/28/clojure-core-async-channels.html">http://clojure.com/blog/2013/06/28/clojure-core-async-channels.html</a>
+</li>
+<li><a href="http://stuartsierra.com/2013/12/08/parallel-processing-with-core-async">http://stuartsierra.com/2013/12/08/parallel-processing-with-core-async</a>
+</li>
+<li><a href="http://swannodette.github.io/2013/07/12/communicating-sequential-processes/">http://swannodette.github.io/2013/07/12/communicating-sequential-processes/</a>
+</li>
+<li><a href="http://blog.drewolson.org/blog/2013/07/04/clojure-core-dot-async-and-go-a-code-comparison/">http://blog.drewolson.org/blog/2013/07/04/clojure-core-dot-async-and-go-a-code-comparison/</a>
+</li>
+<li><a href="http://www.leonardoborges.com/writings/2013/07/06/clojure-core-dot-async-lisp-advantage/">http://www.leonardoborges.com/writings/2013/07/06/clojure-core-dot-async-lisp-advantage/</a>
+</li>
+</ul>
+
+<p>
+Видео:
+</p>
+<ul class="org-ul">
+<li><a href="http://www.infoq.com/presentations/clojure-core-async">http://www.infoq.com/presentations/clojure-core-async</a>
+</li>
+<li><a href="http://www.infoq.com/presentations/core-async-clojure">http://www.infoq.com/presentations/core-async-clojure</a>
+</li>
+<li><a href="https://www.youtube.com/watch?v=AhxcGGeh5ho">https://www.youtube.com/watch?v=AhxcGGeh5ho</a>
+</li>
+<li><a href="https://www.youtube.com/watch?v=enwIIGzhahw">https://www.youtube.com/watch?v=enwIIGzhahw</a>
+</li>
+</ul>
+
+<p>
+Кроме того, этой библиотеке будет посвящена отдельная лекция во второй половине курса
+</p>
+</div>
+</div>
+<div id="outline-container-sec-5-3" class="outline-3">
+<h3 id="sec-5-3"><span class="section-number-3">5.3</span> Avout</h3>
+<div class="outline-text-3" id="text-5-3">
+<p>
+Проект Avout (<a href="http://avout.io/">http://avout.io/</a>) &#x2013; это попытка реализовать Atoms &amp; Refs для распределенных
+систем.  Он позволяет вам использовать изменяемое состояние между разными процессами,
+включая работающие на разных компьютерах.
+</p>
+
+<p>
+Проект реализован на базе Zookeeper для координации изменений, но при этом позволяет вам
+использовать разные backend для хранения данных &#x2013; наряду с <code>zk-ref</code> &amp; <code>zk-atom</code>, есть
+реализации на базе MongoDB &amp; AWS SimpleDB, и вы можете реализовать свои, если необходимо.
+А поскольку реализованные atoms &amp; refs реализуют интерфейс <code>IRef</code>, то для них можно
+использовать стандартные средства, такие как, <code>deref</code>, валидаторы и наблюдатели.
+</p>
+
+<p>
+Для изменения данных, Avout имеет собственный набор функций, имена которых заканчиваются
+на два восклицательных знака &#x2013; <code>swap!!</code>, <code>dosync!!</code>, <code>alter!!</code>, и т.д.  
+</p>
+
+<p>
+Вот небольшой пример кода:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-clojure">(<span style="color: #483d8b;">use</span> 'avout.core)
+(<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">client</span> (connect <span style="color: #8b2252;">"127.0.0.1"</span>))
+
+(<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">r0</span> (zk-ref client <span style="color: #8b2252;">"/r0"</span> 0))
+(<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">r1</span> (zk-ref client <span style="color: #8b2252;">"/r1"</span> []))
+
+(dosync!! client
+  (alter!! r0 inc)
+  (alter!! r1 conj @r0))
+</pre>
+</div>
+
+
+<p>
+К сожалению проект в последнее время не особо развивается :-(
+</p>
+</div>
+</div>
+<div id="outline-container-sec-5-4" class="outline-3">
+<h3 id="sec-5-4"><span class="section-number-3">5.4</span> Pulsar</h3>
+<div class="outline-text-3" id="text-5-4">
+<p>
+Pulsar - это библиотека, которая реализует легковесные потоки и множество различных
+конкурентных операций, поддерживая также акторную модель вычислений, подобную
+реализованной в Erlang.  Pulsar использует Java библиотеку Quasar которая реализует
+акторную модель, и расширяет ее поддержкой pattern matching, включая pattern matching для
+двоичных данных.
+</p>
+
+<p>
+Библиотека очень большая, так что я только упомяну ресурсы, где вы сможете найти больше
+информации:
+</p>
+<ul class="org-ul">
+<li><a href="http://blog.paralleluniverse.co/2013/05/02/quasar-pulsar/">http://blog.paralleluniverse.co/2013/05/02/quasar-pulsar/</a>
+</li>
+<li><a href="http://puniverse.github.io/pulsar/">http://puniverse.github.io/pulsar/</a>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-5-5" class="outline-3">
+<h3 id="sec-5-5"><span class="section-number-3">5.5</span> Lamina</h3>
+<div class="outline-text-3" id="text-5-5">
+<p>
+Библиотека Lamina была разработана для анализа потоков данных, которые представлены как
+каналы, которые можно использовать для параллелизации обработки данных.
+</p>
+
+<p>
+Больше информации вы сможете найти в следующих ресурсах:
+</p>
+<ul class="org-ul">
+<li><a href="https://github.com/ztellman/lamina">https://github.com/ztellman/lamina</a>
+</li>
+<li><a href="http://adambard.com/blog/why-clojure-part-2-async-magic/">http://adambard.com/blog/why-clojure-part-2-async-magic/</a>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-5-6" class="outline-3">
+<h3 id="sec-5-6"><span class="section-number-3">5.6</span> Hadoop-based</h3>
+<div class="outline-text-3" id="text-5-6">
+<p>
+Hadoop часто используется для параллельной обработки больших объемов данных.  Идеи
+Map/Reduce достаточно хорошо ложатся на концепции Clojure, так что не удивительно что
+существует некоторое количество библиотек для этих целей:
+</p>
+
+<ul class="org-ul">
+<li><a href="http://github.com/alexott/clojure-hadoop">http://github.com/alexott/clojure-hadoop</a> &#x2013; первоначально написанная Stuart Sierra, она
+в некоторой степени упрощает написание map &amp; reduce задач, хотя нельзя сказать что она
+полностью прячет сложность Hadoop от программиста.
+</li>
+<li><a href="https://github.com/damballa/parkour">https://github.com/damballa/parkour</a> &#x2013; новая, более высокоуровневая и идиоматичная
+библиотека для написания Map/Reduce на Clojure.  В настоящее время она более активно
+развивается чем clojure-hadoop.
+</li>
+<li><a href="https://github.com/Netflix/PigPen">https://github.com/Netflix/PigPen</a> &#x2013; еще одна библиотека для написания Map/Reduce на
+Clojure.  В отличии от предыдущих, компилирует код в Apache Pig и позволяет
+использовать средства Apache Pig.
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-5-7" class="outline-3">
+<h3 id="sec-5-7"><span class="section-number-3">5.7</span> Ресурсы</h3>
+<div class="outline-text-3" id="text-5-7">
+<p>
+Блоги, книги:
+</p>
+<ul class="org-ul">
+<li><a href="http://java.ociweb.com/mark/stm/article.html">http://java.ociweb.com/mark/stm/article.html</a>
+</li>
+<li>Clojure Programming by Chas Emerick, Brian Carper, Christophe Grand. O'Reilly, 2012
+</li>
+<li><a href="http://aphyr.com/posts/306-clojure-from-the-ground-up-state">http://aphyr.com/posts/306-clojure-from-the-ground-up-state</a>
+</li>
+</ul>
+<p>
+Видео:
+</p>
+<ul class="org-ul">
+<li><a href="http://www.infoq.com/presentations/Value-Identity-State-Rich-Hickey">http://www.infoq.com/presentations/Value-Identity-State-Rich-Hickey</a>
+</li>
+<li><a href="http://skillsmatter.com/podcast/clojure/you-came-for-the-concurrency-right">http://skillsmatter.com/podcast/clojure/you-came-for-the-concurrency-right</a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">&#1040;&#1074;&#1090;&#1086;&#1088;: Alex Ott</p>
+<p class="date">Created: 2014-02-01 Sat 11:27</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.3.1 (<a href="http://orgmode.org">Org</a> mode 8.2.5c)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
